@@ -1,55 +1,45 @@
-import java.io.*;
 import java.util.*;
 
 class Solution {
-    static class Info {
-        String path;
-        int depth, x, y;
-        public Info(String path, int depth, int x, int y) {
-            this.path = path;
-            this.depth = depth;
-            this.x = x;
-            this.y = y;
-        }
-    }
-    
-    static int map[][][];
-    static int[] dx = {0, -1, 1, 0};
-    static int[] dy = {1, 0, 0, -1};
-    static char[] dir = {'d', 'l', 'r', 'u'};
-    public String solution(int n, int m, int x, int y, int r, int c, int k) {
-        map = new int[4][n + 2][m + 2]; 
-        String answer = "impossible";
-        Queue<Info> q = new LinkedList<>();
-        q.add(new Info("", 0, y, x));
+    public int solution(int[][] board, int[][] skill) {
+        int answer = 0;
         
-        loop:
-        while(!q.isEmpty()) {
-            Info info = q.poll();
-            String path = info.path;
-            int depth = info.depth;
-            int nowX = info.x;
-            int nowY = info.y;
+        int[][] save = new int[board.length][board[0].length];
+        int startRow, startCol, endRow, endCol, degree;
+        
+        for(int k = 0; k < skill.length; k++) {
+            startRow = skill[k][1];
+            startCol = skill[k][2];
+            endRow = skill[k][3];
+            endCol = skill[k][4];
+            degree = skill[k][5];
             
-            for(int d = 0; d < 4; d++) {
-                int newX = nowX + dx[d];
-                int newY = nowY + dy[d];
-                if(newX >= 1 && newX <= m && newY >= 1 && newY <= n) {
-                    if(depth == (k-1)) {
-                        if(newX == c && newY == r) {
-                            answer = path + dir[d];
-                            break loop;
-                        }
-                    }
-                    if(depth < k) {
-                        if(map[d][newY][newX] != (depth + 1)) {
-                            map[d][newY][newX] = depth + 1;
-                            q.add(new Info(path + dir[d], depth + 1, newX, newY));
-                        }
-                    }
-                }
+            if(skill[k][0] == 1) degree = -degree;
+            save[startRow][startCol] += degree;
+            if(endRow + 1 < board.length) save[endRow + 1][startCol] -= degree;
+            if(endCol + 1 < board[0].length) save[startRow][endCol + 1] -= degree;
+            if(endRow + 1 < board.length && endCol + 1 < board[0].length) save[endRow + 1][endCol + 1] += degree;
+        }
+
+        for(int i = 1; i < board.length; i++) {
+            for(int j = 0; j < board[0].length; j++) {
+                save[i][j] += save[i-1][j];
             }
         }
+        
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 1; j < board[0].length; j++) {
+                save[i][j] += save[i][j-1];
+            }
+        }
+
+        for(int i = 0; i < board.length; i++) {
+            for(int j = 0; j < board[0].length; j++) {
+                board[i][j] += save[i][j];
+                if(board[i][j] >= 1) answer++;
+            }
+        }
+        
         return answer;
     }
 }
